@@ -4,4 +4,4 @@ Proyecto elaborado por: Diego Maximiliano Hernández Cano
 
 ## Progreso
 
-Por el momento solo es el cuerpo y "funcionabilidad", todavia falta urilizar las APIs de las tiendas y el diseño bonito
+Por el momento ya hace la busqueda en las tres tiendas, solo falta meterle diseño
