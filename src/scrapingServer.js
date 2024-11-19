@@ -1,6 +1,7 @@
 const express = require('express');
 const puppeteer = require('puppeteer');
 const path = require('path');
+require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -18,8 +19,8 @@ app.get('/scrape', async (req, res) => {
 
   const browser = await puppeteer.launch({
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox'], // Necesario para entornos virtualizados como Render
-    executablePath: '/opt/render/.cache/puppeteer/chrome-linux/chrome' // Ruta específica de Render
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--single-process', '--no-zygote'], // Necesario para entornos virtualizados como Render
+    executablePath: process.env.PUPPERTEER_EXECUTABLE_PATH // Ruta específica de Render
     
   });
 
