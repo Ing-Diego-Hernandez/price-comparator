@@ -19,9 +19,8 @@ app.get('/scrape', async (req, res) => {
   const browser = await puppeteer.launch({
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox'], // Necesario para entornos virtualizados como Render
-    executablePath: process.env.isRender
-    ? '/opt/render/.cache/puppeteer/chrome-linux/chrome' // Ruta específica de Render
-    : undefined,
+    executablePath: '/opt/render/.cache/puppeteer/chrome-linux/chrome' // Ruta específica de Render
+    
   });
 
   const page = await browser.newPage();
