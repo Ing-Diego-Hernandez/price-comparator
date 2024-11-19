@@ -16,7 +16,10 @@ app.get('/scrape', async (req, res) => {
     return res.status(400).json({ error: 'No se proporcionó un término de búsqueda' });
   }
 
-  const browser = await puppeteer.launch({ headless: true });
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox'], // Necesario para entornos virtualizados como Render
+  });
 
   const page = await browser.newPage();
 
