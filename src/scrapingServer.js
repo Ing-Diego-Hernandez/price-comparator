@@ -1,15 +1,76 @@
-const express = require('express');
-const puppeteer = require('puppeteer');
 const path = require('path');
-require("dotenv").config();
+const express = require('express');
+const axios = require('axios');
+const cheerio = require('cheerio');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Sirve los archivos del frontend desde la carpeta "build"
 app.use(express.static(path.join(__dirname, '../build')));
 
-// Ruta de scraping
+const scrapeProducts = async (query) => {
+  const tiendas = [
+    {
+      nombre: 'Mercado Libre',
+      url: `https://listado.mercadolibre.com.mx/${query}`,
+      productoSelector: '.poly-box.poly-component__title',
+      precioSelector: '.andes-money-amount',
+    },
+    {
+      nombre: 'Amazon',
+      url: `https://www.amazon.com.mx/s?k=${query}`,
+      productoSelector: '.a-size-base-plus.a-color-base.a-text-normal',
+      precioSelector: '.a-offscreen',
+    },
+    {
+      nombre: 'Temu',
+      url: `https://www.temu.com/search_result.html?search_key=${query}&search_method=user`,
+      productoSelector: '._2BvQbnbN.rE1Dn9Aq',
+      precioSelector: '._382YgpSF._2de9ERAH',
+    },
+  ];
+
+  const resultados = [];
+
+  for (let tienda of tiendas) {
+    try {
+      console.log(`Scraping datos de ${tienda.nombre}...`);
+      
+      // Realizamos la solicitud HTTP con encabezados adicionales.
+      const { data } = await axios.get(tienda.url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
+          'Accept-Language': 'es-ES,es;q=0.9',
+        },
+        timeout: 10000, // Tiempo máximo de espera de 10 segundos
+      });
+
+      const $ = cheerio.load(data);
+
+      // Buscamos el primer producto y precio
+      const producto = $(tienda.productoSelector).first();
+      const precio = $(tienda.precioSelector).first();
+
+      const nombre = producto.text().trim();
+      const precioTexto = precio.text().trim();
+
+      if (nombre && precioTexto) {
+        resultados.push({ nombre, precio: precioTexto, tienda: tienda.nombre });
+      } else {
+        console.warn(`No se encontraron datos válidos para ${tienda.nombre}.`);
+        resultados.push({ nombre: 'Producto no encontrado', precio: 'Precio no disponible', tienda: tienda.nombre });
+      }
+    } catch (error) {
+      console.error(`Error al obtener datos de ${tienda.nombre}:`, error.message);
+
+      // Guardamos el error en los resultados
+      resultados.push({ nombre: 'Error', precio: 'Error al obtener datos', tienda: tienda.nombre });
+    }
+  }
+
+  return resultados;
+};
+
 app.get('/scrape', async (req, res) => {
   const { query } = req.query;
 
@@ -17,61 +78,10 @@ app.get('/scrape', async (req, res) => {
     return res.status(400).json({ error: 'No se proporcionó un término de búsqueda' });
   }
 
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--single-process', '--no-zygote'], // Necesario para entornos virtualizados como Render
-    /*executablePath: 
-      process.env.NODE_ENV === "production"
-      ? process.env.PUPPERTEER_EXECUTABLE_PATH 
-      : puppeteer.executablePath(),*/
-  });
-
-  const page = await browser.newPage();
-
-  const resultados = [];
-  const tiendas = [
-    {
-      nombre: 'Mercado Libre',
-      url: `https://listado.mercadolibre.com.mx/${query}`,
-      productoSelector: '.poly-box.poly-component__title',
-      precioSelector: '.andes-money-amount'
-    },
-    {
-      nombre: 'Amazon',
-      url: `https://www.amazon.com.mx/s?k=${query}`,
-      productoSelector: '.a-size-base-plus.a-color-base.a-text-normal',
-      precioSelector: '.a-offscreen'
-    },
-    {
-      nombre: 'Coppel',
-      url: `https://www.coppel.com/SearchDisplay?storeId=10151&catalogId=10051&langId=-5&sType=SimpleSearch&searchType=search&searchSource=Q&pageView=mosaic&pageGroup=Search&pageSize=24&searchTerm=${query}`,
-      productoSelector: '.chakra-text.css-1g6dv0g',
-      precioSelector: '.chakra-text.css-1uqwphq'
-    }
-  ];
-
-  for (let tienda of tiendas) {
-    try {
-      await page.goto(tienda.url, { waitUntil: 'domcontentloaded' });
-      await page.waitForSelector(tienda.productoSelector);
-
-      const producto = await page.evaluate((productoSelector, precioSelector) => {
-        const nombre = document.querySelector(productoSelector)?.innerText || 'Producto no encontrado';
-        const precio = document.querySelector(precioSelector)?.innerText || 'Precio no disponible';
-        return { nombre, precio };
-      }, tienda.productoSelector, tienda.precioSelector);
-
-      resultados.push({ ...producto, tienda: tienda.nombre });
-    } catch (error) {
-      resultados.push({ nombre: 'Error', precio: 'Error al obtener datos', tienda: tienda.nombre });
-    }
-  }
-
-  await browser.close();
-  res.json(resultados);
+  const productos = await scrapeProducts(query);
+  res.json(productos);
 });
 
-// Maneja cualquier otra ruta con el frontend
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../build', 'index.html'));
 });
