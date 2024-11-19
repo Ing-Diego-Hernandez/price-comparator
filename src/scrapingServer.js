@@ -16,10 +16,8 @@ app.get('/scrape', async (req, res) => {
     return res.status(400).json({ error: 'No se proporcionó un término de búsqueda' });
   }
 
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox'], // Necesario para entornos virtualizados como Render
-  });
+  const browser = await puppeteer.launch({ headless: true });
+
   const page = await browser.newPage();
 
   const resultados = [];
@@ -27,14 +25,14 @@ app.get('/scrape', async (req, res) => {
     {
       nombre: 'Mercado Libre',
       url: `https://listado.mercadolibre.com.mx/${query}`,
-      productoSelector: '.ui-search-item__title',
-      precioSelector: '.price-tag-fraction',
+      productoSelector: '.poly-box.poly-component__title',
+      precioSelector: '.andes-money-amount'
     },
     {
       nombre: 'Amazon',
       url: `https://www.amazon.com.mx/s?k=${query}`,
-      productoSelector: '.a-size-medium.a-color-base.a-text-normal',
-      precioSelector: '.a-price-whole',
+      productoSelector: '.a-size-base-plus.a-color-base.a-text-normal',
+      precioSelector: '.a-offscreen'
     },
     {
       nombre: 'Coppel',
