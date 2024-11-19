@@ -1,19 +1,11 @@
 const express = require('express');
-const cors = require('cors'); // Importa cors
+const path = require('path');
 const puppeteer = require('puppeteer');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = 5000;
 
-app.use(
-  cors({
-    origin: 'https://price-comparator-7jfh.onrender.com', // Cambia al dominio donde está tu frontend
-    methods: ['GET', 'POST'], // Métodos permitidos
-    credentials: true, // Habilitar cookies si es necesario
-  })
-);
-
-//app.use(cors());
+app.use(express.static(path.join(__dirname, './build')));
 
 app.get('/scrape', async (req, res) => {
   const { query } = req.query;
@@ -67,6 +59,10 @@ app.get('/scrape', async (req, res) => {
 
   await browser.close();
   res.json(resultados);
+});
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '*/build', 'index.js'));
 });
 
 app.listen(PORT, () => {
