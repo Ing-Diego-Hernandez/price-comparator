@@ -1,12 +1,14 @@
 const express = require('express');
-const path = require('path');
 const puppeteer = require('puppeteer');
+const path = require('path');
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
-app.use(express.static(path.join(__dirname, './build')));
+// Sirve los archivos del frontend desde la carpeta "build"
+app.use(express.static(path.join(__dirname, '../build')));
 
+// Ruta de scraping
 app.get('/scrape', async (req, res) => {
   const { query } = req.query;
 
@@ -14,29 +16,31 @@ app.get('/scrape', async (req, res) => {
     return res.status(400).json({ error: 'No se proporcionó un término de búsqueda' });
   }
 
-  const browser = await puppeteer.launch({ headless: true });
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox'], // Necesario para entornos virtualizados como Render
+  });
   const page = await browser.newPage();
 
   const resultados = [];
-
   const tiendas = [
     {
       nombre: 'Mercado Libre',
       url: `https://listado.mercadolibre.com.mx/${query}`,
-      productoSelector: '.poly-box.poly-component__title',
-      precioSelector: '.andes-money-amount'
+      productoSelector: '.ui-search-item__title',
+      precioSelector: '.price-tag-fraction',
+    },
+    {
+      nombre: 'Amazon',
+      url: `https://www.amazon.com.mx/s?k=${query}`,
+      productoSelector: '.a-size-medium.a-color-base.a-text-normal',
+      precioSelector: '.a-price-whole',
     },
     {
       nombre: 'Coppel',
       url: `https://www.coppel.com/SearchDisplay?storeId=10151&catalogId=10051&langId=-5&sType=SimpleSearch&searchType=search&searchSource=Q&pageView=mosaic&pageGroup=Search&pageSize=24&searchTerm=${query}`,
       productoSelector: '.chakra-text.css-1g6dv0g',
       precioSelector: '.chakra-text.css-1uqwphq'
-    },
-    {
-      nombre: 'Amazon',
-      url: `https://www.amazon.com.mx/s?k=${query}`,
-      productoSelector: '.a-size-base-plus.a-color-base.a-text-normal',
-      precioSelector: '.a-offscreen'
     }
   ];
 
@@ -61,10 +65,11 @@ app.get('/scrape', async (req, res) => {
   res.json(resultados);
 });
 
+// Maneja cualquier otra ruta con el frontend
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, './build', 'index.html'));
+  res.sendFile(path.join(__dirname, '../build', 'index.html'));
 });
 
 app.listen(PORT, () => {
-  console.log(`Servidor de scraping corriendo en http://localhost:${PORT}`);
+  console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
