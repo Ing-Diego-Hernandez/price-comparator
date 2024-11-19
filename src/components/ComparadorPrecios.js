@@ -41,8 +41,10 @@ function ComparadorPrecios() {
         {productos.map((producto, index) => (
           <div key={index} className="product-card">
             <h2>{producto.nombre}</h2>
-            <p>{producto.tienda}</p>
+            <img src= {producto.imagen}></img> 
             <p className="price">${producto.precio}</p>
+            <a href={producto.link}>link Producto</a>
+            <p>{producto.tienda}</p>
           </div>
         ))}
       </div>
