@@ -10,7 +10,7 @@ function ComparadorPrecios() {
     setCargando(true);
 
     try {
-      const response = await fetch(`http://localhost:5000/scrape?query=${encodeURIComponent(busqueda)}`);
+      const response = await fetch(`https://back-end-price-comparator.onrender.com/scrape?query=${encodeURIComponent(busqueda)}`);
       const data = await response.json();
       setProductos(data);
     } catch (error) {
