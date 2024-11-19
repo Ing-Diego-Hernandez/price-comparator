@@ -5,7 +5,11 @@ const puppeteer = require('puppeteer');
 const app = express();
 const PORT = 5000;
 
-app.use(cors()); // Habilita CORS para todas las rutas
+app.use(
+  cors({
+    origin: 'https://price-comparator-7jfh.onrender.com', // Permite el origen del frontend local
+  })
+);
 
 app.get('/scrape', async (req, res) => {
   const { query } = req.query;
