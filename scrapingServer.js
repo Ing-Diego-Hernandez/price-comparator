@@ -3,15 +3,17 @@ const cors = require('cors'); // Importa cors
 const puppeteer = require('puppeteer');
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
-/*app.use(
+app.use(
   cors({
-    origin: 'https://price-comparator-7jfh.onrender.com', // Dominio del frontend desplegado
+    origin: 'https://price-comparator-7jfh.onrender.com', // Cambia al dominio donde está tu frontend
+    methods: ['GET', 'POST'], // Métodos permitidos
+    credentials: true, // Habilitar cookies si es necesario
   })
-);*/
+);
 
-app.use(cors());
+//app.use(cors());
 
 app.get('/scrape', async (req, res) => {
   const { query } = req.query;
