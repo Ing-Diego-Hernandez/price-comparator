@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import './ComparadorPrecios.css';
 
 function ComparadorPrecios() {
   const [busqueda, setBusqueda] = useState('');
@@ -41,10 +42,10 @@ function ComparadorPrecios() {
         {productos.map((producto, index) => (
           <div key={index} className="product-card">
             <h2>{producto.nombre}</h2>
-            <img src= {producto.imagen}></img> 
-            <p className="price">${producto.precio}</p>
-            <a href={producto.link}>link Producto</a>
-            <p>{producto.tienda}</p>
+            <img src={producto.imagen} alt={producto.nombre} width="200" height="200"/>
+            <p className="price"><strong>Precio: </strong>{producto.precio}</p>
+            <p><strong>Tienda: </strong>{producto.tienda}</p>
+            <a href={producto.link} target="_blank" rel="noopener noreferrer" class="button">Ver producto</a>
           </div>
         ))}
       </div>

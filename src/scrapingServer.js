@@ -14,7 +14,7 @@ const scrapeProducts = async (query) => {
       nombre: 'Mercado Libre',
       url: `https://listado.mercadolibre.com.mx/${query}`,
       productoSelector: '.poly-box.poly-component__title',
-      precioSelector: '.andes-money-amount',
+      precioSelector: '.andes-money-amount__fraction',
       imagenSelector: '.poly-component__picture',
       linkSelector: '.poly-box.poly-component__title a',
     },
@@ -27,28 +27,36 @@ const scrapeProducts = async (query) => {
       linkSelector: '.a-link-normal.s-underline-text.s-underline-link-text.s-link-style.a-text-normal',
     },
     {
-      nombre: 'Temu',
-      url: `https://www.temu.com/search_result.html?search_key=${query}&search_method=user`,
-      productoSelector: '._2BvQbnbN.rE1Dn9Aq',
-      precioSelector: '._382YgpSF._2de9ERAH',
-      imagenSelector: '.lazy-iamge._3frBeExl.goods-img-external.loaded',
-      linkSelector: '._2Tl9qLr1._1ak1dai3',
+      nombre: 'El Palacio de Hierro',
+      url: `https://www.elpalaciodehierro.com/buscar?q=${query}`,
+      productoSelector: '.b-product_tile-name',
+      precioSelector: '.b-product_price-value',
+      imagenSelector: '.h-blend_mode_img',
+      linkSelector: '.b-product_tile-image',
     },
   ];
+
+  
 
   const resultados = [];
 
   for (let tienda of tiendas) {
     try {
-      const { data } = await axios.get(tienda.url);
+      const { data } = await axios.get(tienda.url, {
+        headers: {
+          Accept: "application/json",
+          "User-Agent": "axios 1.7.7"
+        }
+      });
       const $ = cheerio.load(data);
-
+    
       const producto = $(tienda.productoSelector).first();
       const precio = $(tienda.precioSelector).first();
       const imagen = $(tienda.imagenSelector).first();
       const link = $(tienda.linkSelector).first();
 
       const nombre = producto.text().trim();
+      console.log(nombre);
       const precioTexto = precio.text().trim();
       const imagenUrl = imagen.attr('src') || imagen.attr('data-src'); // Algunos sitios usan "data-src"
       const productoUrl = link.attr('href');
